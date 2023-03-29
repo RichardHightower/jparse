@@ -1,0 +1,23 @@
+name: GitHub PR Build Actions For JParse
+
+on:
+  pull_request:
+    types: [opened, synchronize, edited, reopened]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      BUILD_EVENT: ${{ github.event_name }}
+    steps:
+      - name: Setup JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: 11
+          distribution: 'adopt'
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Build and Test
+        run: chmod +x gradlew && ./gradlew clean test
+      - name: Verify Javadoc
+        run: ./gradlew --stacktrace --info javadoc

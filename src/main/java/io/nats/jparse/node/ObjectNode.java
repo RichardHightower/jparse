@@ -24,6 +24,8 @@ import io.nats.jparse.token.TokenTypes;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ObjectNode extends AbstractMap<CharSequence, Node> implements CollectionNode {
 
@@ -92,57 +94,82 @@ public class ObjectNode extends AbstractMap<CharSequence, Node> implements Colle
 
     @Override
     public Node get(Object key) {
-        final var value = getNode(key);
+        final Node value = getNode(key);
         return value instanceof NullNode ? null : value;
+    }
+
+    public boolean containsKey(Object key) {
+       return  lookupElement((CharSequence) key) != null;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return keys().isEmpty();
+    }
+
+    @Override
+    public int size() {
+        return keys().size();
+    }
+
+    @Override
+    public Set<CharSequence> keySet() {
+        return keys().stream().map(CharSequence::toString).collect(Collectors.toSet());
+    }
+
+    @Override
+    public Collection<Node> values() {
+         return keys().stream().map(this::lookupElement).collect(Collectors.toList());
     }
 
     @Override
     public Set<Entry<CharSequence, Node>> entrySet() {
-
-        return new AbstractSet<>() {
-
-            @Override
-            public boolean contains(Object o) {
-                return keys().contains(o);
-            }
-
-            @Override
-            public Iterator<Entry<CharSequence, Node>> iterator() {
-                final Iterator<CharSequence> iterator = keys().iterator();
-                return new Iterator<>() {
-                    @Override
-                    public boolean hasNext() {
-                        return iterator.hasNext();
-                    }
-
-                    @Override
-                    public Entry<CharSequence, Node> next() {
-                        CharSequence nextKey = iterator.next();
-                        return new Entry<>() {
-                            @Override
-                            public CharSequence getKey() {
-                                return nextKey;
-                            }
-
-                            @Override
-                            public Node getValue() {
-                                return getObjectNode(nextKey);
-                            }
-
-                            @Override
-                            public Node setValue(Node value) {
-                                throw new UnsupportedOperationException();
-                            }
-                        };
-                    }
-                };
-            }
-
-            @Override
-            public int size() {
-                return keys().size();
-            }
-        };
+        throw new UnsupportedOperationException();
+//
+//        return new AbstractSet<Entry<CharSequence, Node>>() {
+//
+//            @Override
+//            public boolean contains(Object o) {
+//                return keys().contains(o);
+//            }
+//
+//            @Override
+//            public Iterator<Entry<CharSequence, Node>> iterator() {
+//                final Iterator<CharSequence> iterator = keys().iterator();
+//                return new Iterator<Entry<CharSequence, Node>>() {
+//                    @Override
+//                    public boolean hasNext() {
+//                        return iterator.hasNext();
+//                    }
+//
+//                    @Override
+//                    public Entry<CharSequence, Node> next() {
+//                        CharSequence nextKey = iterator.next();
+//                        return new Entry<CharSequence, Node>() {
+//                            @Override
+//                            public CharSequence getKey() {
+//                                return nextKey;
+//                            }
+//
+//                            @Override
+//                            public Node getValue() {
+//                                return getObjectNode(nextKey);
+//                            }
+//
+//                            @Override
+//                            public Node setValue(Node value) {
+//                                throw new UnsupportedOperationException();
+//                            }
+//                        };
+//                    }
+//                };
+//            }
+//
+//            @Override
+//            public int size() {
+//                return keys().size();
+//            }
+//        };
 
     }
 
@@ -158,16 +185,16 @@ public class ObjectNode extends AbstractMap<CharSequence, Node> implements Colle
         }
 
 
-        final var keys = keys();
-        final var otherKeys = other.keys();
+        final List<CharSequence> keys = keys();
+        final List<CharSequence> otherKeys = other.keys();
 
         if (keys.size() != otherKeys.size()) {
             return false;
         }
 
         for (Object key : keys) {
-            final var otherElementValue = other.getNode(key);
-            final var thisElementValue = this.getNode(key);
+            final Node otherElementValue = other.getNode(key);
+            final Node thisElementValue = this.getNode(key);
 
             if (otherElementValue == null) {
                 return false;
@@ -185,7 +212,7 @@ public class ObjectNode extends AbstractMap<CharSequence, Node> implements Colle
         if (hashCodeSet) {
             return hashCode;
         }
-        final var keys = keys();
+        final List<CharSequence> keys = keys();
         for (Object key : keys) {
             this.getNode(key);
         }
@@ -302,9 +329,10 @@ public class ObjectNode extends AbstractMap<CharSequence, Node> implements Colle
             if (keyToken.length() != key.length()) {
                 return false;
             }
-            final var stringNode = new StringNode(keyToken, source, objectsKeysCanBeEncoded);
+
             if (objectsKeysCanBeEncoded) {
-                final var string = stringNode.toString();
+                final StringNode stringNode = new StringNode(keyToken, source, objectsKeysCanBeEncoded);
+                final String string = stringNode.toString();
                 for (int index = 0; index < key.length(); index++) {
                     if (string.charAt(index) != key.charAt(index)) {
                         return false;
@@ -329,7 +357,7 @@ public class ObjectNode extends AbstractMap<CharSequence, Node> implements Colle
                 Token keyToken = itemKey.get(1);
                 switch (keyToken.type) {
                     case TokenTypes.STRING_TOKEN :
-                        final var element  =new StringNode(keyToken, source, objectsKeysCanBeEncoded);
+                        final StringNode element  =new StringNode(keyToken, source, objectsKeysCanBeEncoded);
                         keys.add(element);
                         break;
                     default :

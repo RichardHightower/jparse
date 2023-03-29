@@ -13,7 +13,7 @@
  * limitations under the License.
  *
  */
-package io.nats.jparse;
+package io.nats.jparse.examples;
 
 import java.util.Objects;
 
@@ -64,7 +64,7 @@ public final class Employee {
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (Employee) obj;
+        Employee that = (Employee) obj;
         return Objects.equals(this.firstName, that.firstName) &&
                 Objects.equals(this.lastName, that.lastName) &&
                 Objects.equals(this.dob, that.dob) &&
