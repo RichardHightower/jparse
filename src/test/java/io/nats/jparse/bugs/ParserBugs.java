@@ -2,6 +2,7 @@ package io.nats.jparse.bugs;
 
 import io.nats.jparse.Json;
 import io.nats.jparse.node.BooleanNode;
+import io.nats.jparse.node.Node;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
@@ -10,6 +11,20 @@ import java.util.function.BiConsumer;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ParserBugs {
+
+    @Test
+    void issue16() {
+       Json.toMap(Json.niceJson("{\n" +
+               "'created': '2020-03-03T13:26:23.023Z',\n" +
+               "'name': 'l',\n" +
+               "'subscription': true,\n" +
+               "'id': 10,\n" +
+               "'updated-by': 1,\n" +
+               "'type': 'organization',\n" +
+               "'updated': '2023-04-03T19:58:04.743Z',\n" +
+               "'tags': []\n" +
+               "}"));
+    }
 
     @Test
     void issue13() {
@@ -47,20 +62,26 @@ public class ParserBugs {
 
 
 
-        //Not all map methods work.
+        //All read map methods should work.
         try {
-            map.entrySet().iterator().next();
-            fail();
+            String key = map.entrySet().iterator().next().getKey();
+            assertTrue(key.startsWith("key"));
         } catch (UnsupportedOperationException ex) {
-            //This map does not support this.
+           fail();
         }
 
         try {
-            map.forEach((s, o) -> {
+            map.forEach((key, value) -> {
+                assertTrue(key.startsWith("key"));
+                assertTrue(value instanceof Node);
+                assertTrue(value instanceof Number || value instanceof List
+                            || value instanceof CharSequence
+                            || value instanceof BooleanNode);
             });
-            fail();
+
         } catch (UnsupportedOperationException ex) {
             //This map does not support this.
+            fail();
         }
         // Most map methods should work like getOrDefault, computeIfEmpty, computeIfPresent, etc.
     }
